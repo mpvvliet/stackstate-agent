@@ -120,6 +120,7 @@ deps_win:
   script:
     - call .gitlab-scripts/windows_build_env.cmd
     - call .gitlab-scripts/windows_deps.cmd
+    - inv -e deps -v
     - inv version -u > version.txt
   artifacts:
     paths:
