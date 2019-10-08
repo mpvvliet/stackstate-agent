@@ -70,24 +70,24 @@ To install the official release:
     $ wget -qO- https://stackstate-agent-2.s3.amazonaws.com/install.sh | STS_API_KEY="xxx" STS_URL="yyy" bash
 
 ##### Test
-    
+
 If you wanna install a branch version use the test repository:
 
     $ curl -o- https://stackstate-agent-2-test.s3.amazonaws.com/install.sh | STS_API_KEY="xxx" STS_URL="yyy" CODE_NAME="PR_NAME" bash
      or
     $ wget -qO- https://stackstate-agent-2-test.s3.amazonaws.com/install.sh | STS_API_KEY="xxx" STS_URL="yyy" CODE_NAME="PR_NAME" bash
 
-and replace `PR_NAME` with the branch name (e.g. `master`, `STAC-xxxx`). 
+and replace `PR_NAME` with the branch name (e.g. `master`, `STAC-xxxx`).
 
 ### Docker
 
 ##### Official
 
-    $ docker pull stackstate/stackstate-agent-2:latest
+    $ docker pull docker.io/stackstate/stackstate-agent-2:latest
 
 ##### Test
 
-    $ docker pull stackstate/stackstate-agent-2-test:latest
+    $ docker pull docker.io/stackstate/stackstate-agent-2-test:latest
 
 ### Windows
 
@@ -98,12 +98,12 @@ To install the official release:
     $ . { iwr -useb https://stackstate-agent-2.s3.amazonaws.com/install.ps1 } | iex; install -stsApiKey "xxx" -stsUrl "yyy"
 
 ##### Test
-    
+
 If you wanna install a branch version use the test repository:
 
     $ . { iwr -useb https://stackstate-agent-2-test.s3.amazonaws.com/install.ps1 } | iex; install -stsApiKey "xxx" -stsUrl "yyy" -codeName "PR_NAME"
 
-and replace `PR_NAME` with the branch name (e.g. `master`, `STAC-xxxx`). 
+and replace `PR_NAME` with the branch name (e.g. `master`, `STAC-xxxx`).
 
 #### Arguments
 
@@ -111,7 +111,7 @@ Other arguments can be passed to the installation command.
 
 Linux arguments:
 
-- `HOSTNAME` = Instance hostname
+- `STS_HOSTNAME` = Instance hostname
 - `$HOST_TAGS` = Agent host tags to use for all topology component (by default `os:linux` will be added)
 - `SKIP_SSL_VALIDATION` = Skip ssl certificates validation when talking to the backend (defaults to `false`)
 - `STS_INSTALL_ONLY` = Agent won't be automatically started after installation

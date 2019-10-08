@@ -26,17 +26,16 @@ venv/
 agentmsg.h
 
 # go-generated files
-datadog.yaml
+stackstate.yaml
 network-tracer.yaml
 dogstatsd.yaml
-Dockerfiles/cluster-agent/datadog-cluster.yaml
-Dockerfiles/cluster-agent/dist
 
 # jetbrains IDE directory
 /.idea/
 
 # Ignore debs from the root of the project.
-datadog-agent*_amd64.deb
+stackstate-agent*_amd64.deb
+stackstate-agent*_amd64.rpm
 
 # Ignore pem created during the tests
 *.pem
@@ -88,13 +87,6 @@ p-env/
 omnibus/omnibus/*
 pkg/flare/auth_token
 
-#tf artifacts
-*/**/.terraform
-config-map-aws-auth.yaml
-kubeconfig
-*/**/*.tfstate
-*/**/*.tfstate.backup
-
 # vagrant
 .vagrant
 
@@ -113,3 +105,10 @@ Pipfile*
 
 # molecule local json files
 /test/molecule-role/molecule/*/topic-*.json
+
+# cluster agent generated files
+Dockerfiles/cluster-agent/stackstate-cluster.yaml
+Dockerfiles/cluster-agent/auth_token
+Dockerfiles/cluster-agent/cluster_agent.auth_token
+Dockerfiles/cluster-agent/stackstate-cluster-agent
+Dockerfiles/cluster-agent/dist/

@@ -18,7 +18,7 @@ def test_docker_compose_file(host):
     assert f.is_file
 
 
-def test_receiver_ok(host):
+def test_receiver_healthy(host):
     c = "curl -s -o /dev/null -w \"%{http_code}\" http://localhost:7077/health"
     assert host.check_output(c) == "200"
 
@@ -242,14 +242,14 @@ def test_host_metrics(host):
 
         # Memory
         assert_metric("system.mem.total", lambda v: v > 900.0, lambda v: v > 900.0, lambda v: v > 2000.0)
-        assert_metric("system.mem.usable", lambda v: 1000.0 > v > 300.0, lambda v: 1000.0 > v > 300.0, lambda v: 1500.0 > v > 400.0)
+        assert_metric("system.mem.usable", lambda v: 1000.0 > v > 300.0, lambda v: 1000.0 > v > 300.0, lambda v: 1500.0 > v > 300.0)
         assert_metric("system.mem.pct_usable", lambda v: 1.0 > v > 0.3, lambda v: 1.0 > v > 0.3, lambda v: 1.0 > v > 0.2)
 
         # Load - only linux
         assert_metric("system.load.norm.1", lambda v: v >= 0.0, lambda v: v >= 0.0, None)
 
         # CPU
-        assert_metric("system.cpu.idle", lambda v: v > 0.0, lambda v: v > 0.0, lambda v: v >= 0.0)
+        assert_metric("system.cpu.idle", lambda v: v > 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)
         assert_metric("system.cpu.iowait", lambda v: v >= 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)
         assert_metric("system.cpu.system", lambda v: v > 0.0, lambda v: v > 0.0, lambda v: v > 0.0)
         assert_metric("system.cpu.user", lambda v: v >= 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)

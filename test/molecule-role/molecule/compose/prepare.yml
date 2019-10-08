@@ -16,7 +16,7 @@
         state: present
         update_cache: yes
       retries: 20
-      delay: 10
+      delay: 30
       register: pip_result
       until: pip_result is not failed
     - name: Installing python boto packages
@@ -69,7 +69,7 @@
           output=json
         dest: /home/ubuntu/.aws/config
     - name: Run Docker login
-      shell: eval $(aws ecr get-login --no-include-email)
+      shell: echo "{{ quay_password }}" | docker login --username={{ quay_user }} --password-stdin quay.io
     - name: Install Docker Compose
       become: true
       get_url:
@@ -83,7 +83,7 @@
         dest: "/home/ubuntu/{{ item }}"
       with_items:
         - docker-compose.yml
-    - name: Gather facts (we need docker network interface ip)
+    - name: Gather facts (we need the docker network interface ip)
       setup:
     - name: Run Docker compose
       command: docker-compose up --scale stackstate-books-app=2 --scale stackstate-authors-app=2 -d
