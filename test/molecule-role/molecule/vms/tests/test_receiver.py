@@ -45,6 +45,29 @@ def test_generic_events(host):
     util.wait_until(wait_for_metrics, 30, 3)
 
 
+def test_state_events(host):
+    url = "http://localhost:7070/api/topic/sts_state_events?offset=0&limit=80"
+
+    def wait_for_metrics():
+        data = host.check_output("curl \"%s\"" % url)
+        json_data = json.loads(data)
+        with open("./topic-state-events.json", 'w') as f:
+            json.dump(json_data, f, indent=4)
+
+        state_events = defaultdict(set)
+        for message in json_data["messages"]:
+            state_events[message["message"]["StateEvent"]["host"]].add(message["message"]["StateEvent"]["name"])
+
+        print(state_events)
+        assert state_events["agent-ubuntu"] == {"stackstate.agent.up", "stackstate.agent.check_status", "ntp.in_sync"}
+        assert state_events["agent-fedora"] == {"stackstate.agent.up", "stackstate.agent.check_status", "ntp.in_sync"}
+        assert state_events["agent-centos"] == {"stackstate.agent.up", "stackstate.agent.check_status", "ntp.in_sync"}
+        assert state_events["agent-connection-namespaces"] == {"stackstate.agent.up", "stackstate.agent.check_status", "ntp.in_sync"}
+        assert state_events["agent-win"] == {"stackstate.agent.up", "stackstate.agent.check_status", "ntp.in_sync"}
+
+    util.wait_until(wait_for_metrics, 30, 3)
+
+
 def _get_instance_config(instance_name):
     instance_config_dict = safe_load_file(os.environ['MOLECULE_INSTANCE_CONFIG'])
     return next(item for item in instance_config_dict if item['instance'] == instance_name)
@@ -193,28 +216,25 @@ def test_created_connection_before_start(host, common_vars):
 
 
 def test_host_metrics(host):
-    url = "http://localhost:7070/api/topic/sts_metrics?limit=2000"
+    url = "http://localhost:7070/api/topic/sts_multi_metrics?limit=2000"
 
     def wait_for_metrics():
         data = host.check_output("curl \"%s\"" % url)
         json_data = json.loads(data)
-        with open("./topic-metrics.json", 'w') as f:
+        with open("./topic-sts-multi-metrics.json", 'w') as f:
             json.dump(json_data, f, indent=4)
 
         metrics = {}
         for message in json_data["messages"]:
-            metric = message["message"]["Metric"]
+            m_host = message["message"]["MultiMetric"]["host"]
+            for m_name in message["message"]["MultiMetric"]["values"].keys():
+                if m_name not in metrics:
+                    metrics[m_name] = {}
+                if m_host not in metrics[m_name]:
+                    metrics[m_name][m_host] = []
 
-            m_name = metric["name"]
-            m_host = metric["host"]
-
-            if m_name not in metrics:
-                metrics[m_name] = {}
-            if m_host not in metrics[m_name]:
-                metrics[m_name][m_host] = []
-
-            values = [value["value"] for value in metric["value"]]
-            metrics[m_name][m_host] += values
+                values = [message["message"]["MultiMetric"]["values"][m_name]]
+                metrics[m_name][m_host] += values
 
         # These values are based on an ec2 micro instance for ubuntu and fedora
         # and small instance for windows
@@ -243,15 +263,15 @@ def test_host_metrics(host):
         # Memory
         assert_metric("system.mem.total", lambda v: v > 900.0, lambda v: v > 900.0, lambda v: v > 2000.0)
         assert_metric("system.mem.usable", lambda v: 1000.0 > v > 300.0, lambda v: 1000.0 > v > 300.0, lambda v: 1500.0 > v > 300.0)
-        assert_metric("system.mem.pct_usable", lambda v: 1.0 > v > 0.3, lambda v: 1.0 > v > 0.3, lambda v: 1.0 > v > 0.2)
+        assert_metric("system.mem.pct_usable", lambda v: 1.0 > v > 0.3, lambda v: 1.0 > v > 0.3, lambda v: 1.0 > v > 0.1)
 
         # Load - only linux
         assert_metric("system.load.norm.1", lambda v: v >= 0.0, lambda v: v >= 0.0, None)
 
         # CPU
-        assert_metric("system.cpu.idle", lambda v: v > 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)
+        assert_metric("system.cpu.idle", lambda v: v >= 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)
         assert_metric("system.cpu.iowait", lambda v: v >= 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)
-        assert_metric("system.cpu.system", lambda v: v > 0.0, lambda v: v > 0.0, lambda v: v > 0.0)
+        assert_metric("system.cpu.system", lambda v: v >= 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)
         assert_metric("system.cpu.user", lambda v: v >= 0.0, lambda v: v >= 0.0, lambda v: v >= 0.0)
 
         # Inodes
@@ -264,6 +284,10 @@ def test_host_metrics(host):
         assert_metric("stackstate.process.agent", lambda v: v == 1.0, lambda v: v == 1.0, lambda v: v == 1.0)
         assert_metric("stackstate.process.processes.host_count", lambda v: v > 1.0, lambda v: v > 1.0, lambda v: v > 1.0)
         assert_metric("stackstate.process.containers.host_count", lambda v: v == 0.0, lambda v: v == 0.0, lambda v: v == 0.0)
+
+        # Assert that we don't see any Datadog metrics
+        datadog_metrics = [(key, value) for key, value in metrics.iteritems() if key.startswith("datadog")]
+        assert len(datadog_metrics) == 0, 'Datadog metrics found in sts_metrics: [%s]' % ', '.join(map(str, datadog_metrics))
 
     util.wait_until(wait_for_metrics, 30, 3)
 
